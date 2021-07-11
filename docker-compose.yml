@@ -1,0 +1,26 @@
+version: '2.0'
+
+services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://postgres_user:pass@db:5432/${DATABASE_NAME:-kittens_store_dev}
+      RACK_ENV: ${RACK_ENV:-development}
+      PORT: 3000
+      HOST: 0.0.0.0
+      DB_PORT: 5432
+    command: ['sh', 'scripts/serve.sh']
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13.3
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - ./data/db:/var/lib/postgresql/data

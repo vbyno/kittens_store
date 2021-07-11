@@ -1,0 +1,7 @@
+*.md
+data
+.git
+.gitignore
+.cache
+.ruby-*
+docker-compose.yml
