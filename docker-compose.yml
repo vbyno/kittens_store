@@ -1,4 +1,4 @@
-version: '2.0'
+version: '3.9'
 
 services:
   app:
@@ -9,7 +9,7 @@ services:
       PORT: 3000
       HOST: 0.0.0.0
       DB_PORT: 5432
-    command: ['sh', 'scripts/serve.sh']
+    command: ['sh', '-c', 'scripts/serve.sh']
     ports:
       - '3000:3000'
     volumes:

@@ -11,3 +11,11 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo chmod 666 /var/run/docker.sock
 
 RACK_ENV=development DATABASE_NAME=kittens_store_dev docker-compose up
+
+1. Create Image
+
+Read the logs
+
+```
+tail -f /var/log/cloud-init-output.log
+```
