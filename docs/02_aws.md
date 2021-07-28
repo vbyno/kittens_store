@@ -11,3 +11,29 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo chmod 666 /var/run/docker.sock
 
 RACK_ENV=development DATABASE_NAME=kittens_store_dev docker-compose up
+
+Instance Settings => Edit user data
+
+1. Create Image
+
+2. Add LBs security group to EC2 instances security group as a 80 port connection point
+
+3. Read the logs
+
+```
+docker logs -f 561fa407d1fa
+```
+
+Autoscaling:
+Create launch template for autoscaling group
+launch template -> advanced -> user data
+```bash
+#!/bin/bash
+
+sudo service docker start
+
+cd /home/ec2-user/kittens_store
+sudo docker-compose up
+```
+
+Create autoscaling group
