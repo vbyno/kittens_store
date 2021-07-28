@@ -8,10 +8,23 @@ versions.tf - Specification of providers and versions of terraform. See below
 ```bash
 cd ops/infrastructure
 touch variables.tf main.tf output.tf versions.tf
-terraform init
-terraform apply
+tfenv install
+tfenv use
+cd ops/infrastructure && terraform init && cd ../..
+terraform -chdir=ops/infrastructure plan
+terraform apply -var-file=local.tfvars
 ```
 
 Add .terraform to .gitignore
 
 Add and commit the rest of the new files
+
+Apply env variables
+```
+export $(cat ../../.env | xargs)
+```
+
+Console:
+```
+terraform -chdir=ops/infrastructure console
+```
