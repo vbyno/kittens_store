@@ -3,15 +3,9 @@ output "dogs_vpc_id" {
 }
 
 output "subnet_ids" {
-	value = [
-		aws_subnet.dogs_subnet_01.id,
-		aws_subnet.dogs_subnet_02.id
-	]
+	value = ["${aws_subnet.dogs_subnet.*.id}"]
 }
 
 output "availability_zones" {
-	value = [
-		aws_subnet.dogs_subnet_01.availability_zone,
-		aws_subnet.dogs_subnet_02.availability_zone
-	]
+	value = ["${aws_subnet.dogs_subnet.*.availability_zone}"]
 }
