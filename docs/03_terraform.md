@@ -27,6 +27,7 @@ export $(cat ../../.env | xargs)
 Console:
 ```
 terraform -chdir=ops/infrastructure console
+terraform -chdir=ops/infrastructure apply -auto-approve
 ```
 
 Connect:
