@@ -6,7 +6,6 @@ variable "name" {
 variable "cidr_block" {
   type = string
   description = "A /16 CIDR range definition, such as 10.1.0.0/16, that the VPC will use"
-  default = "10.1.0.0/16"
 }
 
 variable "subnets_number" {
