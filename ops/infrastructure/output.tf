@@ -1,7 +1,7 @@
 output "public_ip" {
-  value = aws_instance.dogs_server.public_ip
+  value = module.aws_ec2.public_ip
 }
 
 output "security_group_id" {
-  value = aws_security_group.ec2_security_group.id
+  value = module.aws_ec2.security_group_id
 }
