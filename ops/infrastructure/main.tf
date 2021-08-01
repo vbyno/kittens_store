@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 module "aws-vpc" {
-  source = "./modules/aws-vpc"
+  source = "./modules/vpc"
 }
 
 resource "aws_key_pair" "aws_key" {
@@ -21,7 +21,7 @@ data "http" "my_public_ip" {
 resource "aws_security_group" "ec2_security_group" {
   name_prefix = "dogs_ec2_sg"
   description = "Allow SSH from the current machine public IP and HTTP for everyone"
-  vpc_id      = module.aws-vpc.dogs_vpc_id
+  vpc_id      = module.aws-vpc.id
 
   lifecycle {
     create_before_destroy = true
