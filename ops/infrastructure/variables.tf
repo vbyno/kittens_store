@@ -1,11 +1,11 @@
 variable "name" {
-  type = string
+  type        = string
   description = "A name of the project"
-  default = "kittens-store"
+  default     = "kittens-store"
 }
 
 variable "aws_region" {
-  type = string
+  type        = string
   description = "AWS Region to provision the infrastructure in"
-  default = "eu-west-3"
+  default     = "eu-west-3"
 }
