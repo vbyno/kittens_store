@@ -156,10 +156,59 @@ resource "aws_instance" "dogs_server" {
     }
   }
 
+  provisioner "file" {
+    source      = "${path.module}/../scripts/run_app_ec2.sh"
+    destination = "/tmp/run_app_ec2.sh"
+
+    connection {
+      type     = "ssh"
+      host     = self.public_ip
+      user     = "ec2-user"
+      private_key = trimspace(file("~/.ssh/aws_key"))
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = ["mkdir -p ~/app"]
+
+    connection {
+      type     = "ssh"
+      host     = self.public_ip
+      user     = "ec2-user"
+      private_key = trimspace(file("~/.ssh/aws_key"))
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/../../docker-compose.prod.yml"
+    destination = "~/app/docker-compose.prod.yml"
+
+    connection {
+      type     = "ssh"
+      host     = self.public_ip
+      user     = "ec2-user"
+      private_key = trimspace(file("~/.ssh/aws_key"))
+    }
+  }
+
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/install_docker_ec2.sh",
-      "/tmp/install_docker_ec2.sh args",
+      "/tmp/install_docker_ec2.sh args"
+    ]
+
+    connection {
+      type     = "ssh"
+      host     = self.public_ip
+      user     = "ec2-user"
+      private_key = trimspace(file("~/.ssh/aws_key"))
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/run_app_ec2.sh",
+      "/tmp/run_app_ec2.sh"
     ]
 
     connection {
