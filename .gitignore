@@ -1,4 +1,5 @@
 data
+.terraform/
 ops/infrastructure/.terraform
 ops/infrastructure/terraform.tfstate
 ops/infrastructure/terraform.tfstate.backup
