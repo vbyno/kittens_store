@@ -2,8 +2,12 @@ provider "aws" {
   region = var.aws_region
 }
 
-module "aws-vpc" {
+module "aws_vpc" {
   source = "./modules/vpc"
+
+  name = "dogs-vpc"
+  cidr_block = "10.1.0.0/16"
+  subnets_number = 3
 }
 
 resource "aws_key_pair" "aws_key" {
@@ -21,7 +25,7 @@ data "http" "my_public_ip" {
 resource "aws_security_group" "ec2_security_group" {
   name_prefix = "dogs_ec2_sg"
   description = "Allow SSH from the current machine public IP and HTTP for everyone"
-  vpc_id      = module.aws-vpc.id
+  vpc_id      = module.aws_vpc.id
 
   lifecycle {
     create_before_destroy = true
@@ -84,7 +88,7 @@ resource "aws_instance" "dogs_server" {
   associate_public_ip_address = true
 
   key_name  = aws_key_pair.aws_key.key_name
-  subnet_id = element(module.aws-vpc.subnet_ids, 0)
+  subnet_id = element(module.aws_vpc.subnet_ids, 0)
 
   vpc_security_group_ids = [
     aws_security_group.ec2_security_group.id
