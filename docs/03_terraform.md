@@ -28,3 +28,8 @@ Console:
 ```
 terraform -chdir=ops/infrastructure console
 ```
+
+Connect:
+```
+ssh -i ~/.ssh/aws_key "ec2-user@$(terraform -chdir=ops/infrastructure output -raw public_ip)"
+```
