@@ -2,16 +2,16 @@ version: '2.0'
 
 services:
   app:
-    build: .
+    image: vbyno/kittens-store:1.0.0
     environment:
-      DATABASE_URL: postgres://postgres_user:pass@db:5432/${DATABASE_NAME:-kittens_store_dev}
-      RACK_ENV: ${RACK_ENV:-development}
+      DATABASE_URL: postgres://postgres_user:pass@db:5432/kittens_store
+      RACK_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
       DB_PORT: 5432
     command: ['sh', 'scripts/serve.sh']
     ports:
-      - '3000:3000'
+      - '80:3000'
     depends_on:
       - db
 

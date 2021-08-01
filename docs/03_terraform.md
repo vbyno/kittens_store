@@ -28,9 +28,11 @@ Console:
 ```
 terraform -chdir=ops/infrastructure console
 terraform -chdir=ops/infrastructure apply -auto-approve
+terraform -chdir=ops/infrastructure apply -auto-approve -replace=aws_instance.dogs_server
 ```
 
 Connect:
 ```
 ssh -i ~/.ssh/aws_key "ec2-user@$(terraform -chdir=ops/infrastructure output -raw public_ip)"
+curl "ec2-user@$(terraform -chdir=ops/infrastructure output -raw public_ip)"
 ```
