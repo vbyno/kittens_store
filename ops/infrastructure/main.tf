@@ -62,7 +62,7 @@ resource "aws_route_table_association" "dogs_route_table_association" {
 }
 
 resource "aws_key_pair" "aws_key" {
-  key_name   = "key_name_prefix"
+  key_name_prefix = "my_aws_key"
   public_key = trimspace(file("~/.ssh/aws_key.pub"))
 }
 
@@ -74,9 +74,13 @@ data "http" "my_public_ip" {
 }
 
 resource "aws_security_group" "ec2_security_group" {
-  name        = "ec2_security_group"
-  description = "Allow SSH from public IP and HTTP for everyone"
+  name_prefix = "dogs_ec2_sg"
+  description = "Allow SSH from the current machine public IP and HTTP for everyone"
   vpc_id      = aws_vpc.dogs_vpc.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   ingress {
     description      = "SSH from Local Machine"
