@@ -128,9 +128,14 @@ data "aws_ami" "latest_amazon_linux" {
   owners = ["amazon"] # Canonical
 }
 
+data "template_file" "init" {
+  template = "${file("${path.module}/templates/app_user_data.sh.tpl")}"
+}
+
 resource "aws_instance" "dogs_server" {
   ami           = data.aws_ami.latest_amazon_linux.id
   instance_type = "t2.micro"
+  user_data = data.template_file.init.template
   associate_public_ip_address = true
 
   key_name = aws_key_pair.aws_key.key_name
@@ -142,30 +147,6 @@ resource "aws_instance" "dogs_server" {
 
   tags = {
     Name = "dogs-server"
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/../scripts/install_docker_ec2.sh"
-    destination = "/tmp/install_docker_ec2.sh"
-
-    connection {
-      type     = "ssh"
-      host     = self.public_ip
-      user     = "ec2-user"
-      private_key = trimspace(file("~/.ssh/aws_key"))
-    }
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/../scripts/run_app_ec2.sh"
-    destination = "/tmp/run_app_ec2.sh"
-
-    connection {
-      type     = "ssh"
-      host     = self.public_ip
-      user     = "ec2-user"
-      private_key = trimspace(file("~/.ssh/aws_key"))
-    }
   }
 
   provisioner "remote-exec" {
@@ -182,34 +163,6 @@ resource "aws_instance" "dogs_server" {
   provisioner "file" {
     source      = "${path.module}/../../docker-compose.prod.yml"
     destination = "~/app/docker-compose.prod.yml"
-
-    connection {
-      type     = "ssh"
-      host     = self.public_ip
-      user     = "ec2-user"
-      private_key = trimspace(file("~/.ssh/aws_key"))
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/install_docker_ec2.sh",
-      "/tmp/install_docker_ec2.sh args"
-    ]
-
-    connection {
-      type     = "ssh"
-      host     = self.public_ip
-      user     = "ec2-user"
-      private_key = trimspace(file("~/.ssh/aws_key"))
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/run_app_ec2.sh",
-      "/tmp/run_app_ec2.sh"
-    ]
 
     connection {
       type     = "ssh"
