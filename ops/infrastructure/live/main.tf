@@ -26,7 +26,7 @@ data "http" "my_public_ip" {
 }
 
 module "aws_ec2" {
-  source = "../modules/app_instance"
+  source = "../modules/ec2"
 
   name_prefix = "dogs"
   vpc_id = data.terraform_remote_state.vpc_state.outputs.vpc_id
