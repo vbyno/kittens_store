@@ -1,0 +1,8 @@
+[*]
+indent_style = space
+
+[*.{js,ts,json,rb,tf}]
+indent_size = 2
+
+[*.go]
+indent_style = tab

@@ -35,3 +35,10 @@ module "aws_ec2" {
   ssh_local_key_path = "~/.ssh/aws_key"
   docker_compose_file_path = "${path.module}/../../../docker-compose.prod.yml"
 }
+
+module "aws_rds" {
+  source = "../modules/rds"
+
+  name = "dogs_rds"
+  vpc = data.terraform_remote_state.vpc_state.outputs.vpc
+}

@@ -5,3 +5,7 @@ output "vpc_id" {
 output "subnet_ids" {
   value = module.aws_vpc.subnet_ids
 }
+
+output "vpc" {
+  value = module.aws_vpc.vpc
+}
