@@ -22,4 +22,5 @@ https://learnk8s.io/troubleshooting-deployments
 ```bash
 kubectl get events --sort-by=.metadata.creationTimestamp
 k get pv
+minikube service kittens-service --url
 ```

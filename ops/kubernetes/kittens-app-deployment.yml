@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kittens-app
+  labels:
+    app: kittens-app-label
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kittens-app-label
+  template:
+    metadata:
+      labels:
+        app: kittens-app-label
+    spec:
+      # restartPolicy: Never
+      containers:
+        - name: kittens-app
+          image: vbyno/kittens-store:1.0.0
+          imagePullPolicy: "IfNotPresent"
+          command: ['sh', 'scripts/serve.sh']
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+            requests:
+              cpu: "0.5"
+              memory: "100Mi"
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: kittens-app-config
