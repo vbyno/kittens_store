@@ -1,13 +1,11 @@
 ```bash
-kubectl create -f postgres-configmap.yml
-kubectl create -f postgres-storage.yml
-kubectl create -f postgres-deployment.yml
-kubectl create -f postgres-service.yml
+k create -f postgres-configmap.yml && k create -f postgres-storage.yml && k create -f postgres-deployment.yml && k create -f postgres-service.yml &&
+k create -f kittens-app-configmap.yml && k create -f kittens-app-deployment.yml && k create -f kittens-app-service.yml
 
 kubectl get service postgres
 psql -h localhost -U postgresadmin --password -p 31252 postgresdb
 
-k delete -f postgres-service.yml && k delete -f postgres-deployment.yml && k delete -f postgres-storage.yml && k delete -f postgres-configmap.yml
+k delete -f kittens-app-service.yml && k delete -f kittens-app-deployment.yml && k delete -f kittens-app-configmap.yml && k delete -f postgres-service.yml && k delete -f postgres-deployment.yml && k delete -f postgres-storage.yml && k delete -f postgres-configmap.yml
 ```
 
 Commands
@@ -23,4 +21,23 @@ https://learnk8s.io/troubleshooting-deployments
 kubectl get events --sort-by=.metadata.creationTimestamp
 k get pv
 minikube service kittens-service --url
+```
+
+# Helm
+Installation https://helm.sh/docs/intro/quickstart/
+```
+brew install helm
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add matic https://matic-insurance.github.io/helm-charts
+helm search repo bitnami
+helm repo update
+
+helm install bitnami/mysql --generate-name
+helm list
+helm uninstall mysql-1629562996
+
+helm status happy-panda
+helm show values bitnami/postgresql
+
+helm install -f values.yaml bitnami/wordpress --generate-name
 ```
