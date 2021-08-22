@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kittens-app-config
+  name: {{ .Release.Name }}-app-config
   labels:
     app: kittens-config
 data:
-  DATABASE_URL: "postgres://postgresadmin:admin123@postgres:5432/kittens_store"
+  DATABASE_URL: "postgres://postgresadmin:admin123@{{.Release.Name}}-postgres-service:5432/kittens_store"
   RACK_ENV: production
   PORT: "3000"
   HOST: "0.0.0.0"

@@ -1,6 +1,5 @@
 ```bash
-k create -f postgres-configmap.yml && k create -f postgres-storage.yml && k create -f postgres-deployment.yml && k create -f postgres-service.yml &&
-k create -f kittens-app-configmap.yml && k create -f kittens-app-deployment.yml && k create -f kittens-app-service.yml
+k create -f postgres-configmap.yml && k create -f postgres-storage.yml && k create -f postgres-deployment.yml && k create -f postgres-service.yml && k create -f kittens-app-configmap.yml && k create -f kittens-app-deployment.yml && k create -f kittens-app-service.yml
 
 kubectl get service postgres
 psql -h localhost -U postgresadmin --password -p 31252 postgresdb
@@ -20,7 +19,7 @@ https://learnk8s.io/troubleshooting-deployments
 ```bash
 kubectl get events --sort-by=.metadata.creationTimestamp
 k get pv
-minikube service kittens-service --url
+minikube service --url kittens-app-service
 ```
 
 # Helm
@@ -40,4 +39,6 @@ helm status happy-panda
 helm show values bitnami/postgresql
 
 helm install -f values.yaml bitnami/wordpress --generate-name
+
+helm install kittens .
 ```

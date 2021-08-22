@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kittens-app
+  name: {{ .Release.Name }}-app-deployment
   labels:
     app: kittens-app-label
 spec:
-  replicas: 1
+  replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
       app: kittens-app-label
@@ -17,7 +17,7 @@ spec:
       # restartPolicy: Never
       containers:
         - name: kittens-app
-          image: vbyno/kittens-store:1.0.0
+          image: {{ .Values.app.image }}
           imagePullPolicy: "IfNotPresent"
           command: ['sh', 'scripts/serve.sh']
           resources:

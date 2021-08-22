@@ -1,7 +1,7 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: postgres-pv-volume
+  name: {{ .Release.Name }}-postgres-pv-volume
   labels:
     type: local
     app: postgres
@@ -12,12 +12,12 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: "/Users/vb/dev/devops_bootcamp/assignment-kittens-store/data/k8s-db"
+    path: {{ .Values.db.storage_path }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: postgres-pv-claim
+  name: {{ .Release.Name }}-postgres-pv-claim
   labels:
     app: postgres
 spec:
