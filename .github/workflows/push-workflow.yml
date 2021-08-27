@@ -1,0 +1,39 @@
+name: kittens-action
+on: [push]
+
+jobs:
+  linters:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13.3
+        env:
+          POSTGRES_DB: kittens_store_test
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres_user
+          POSTGRES_PASSWORD: postgres_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.4.9
+      - name: install dependencies
+        run: bundle install --jobs 3 --retry 3
+      - name: rubocop
+        run: bundle exec rubocop
+      - name: rspec
+        run: sh scripts/test.sh
+        env:
+          DATABASE_URL: postgres://postgres_user:postgres_password@localhost:5432/kittens_store_test
+          RACK_ENV: test
