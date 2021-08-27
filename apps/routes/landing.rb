@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module KittensStore
   module Routes
     class Landing < Sinatra::Application

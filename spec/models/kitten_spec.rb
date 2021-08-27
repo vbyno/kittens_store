@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require_relative '../../apps/models/kitten'
 
@@ -11,12 +13,12 @@ RSpec.describe KittensStore::Models::Kitten do
 
     it 'validates name' do
       kitten.name = nil
-      expect(kitten).to_not be_valid
+      expect(kitten).not_to be_valid
     end
 
     it 'validates price' do
       kitten.price = nil
-      expect(kitten).to_not be_valid
+      expect(kitten).not_to be_valid
     end
   end
 end
