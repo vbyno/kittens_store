@@ -9,6 +9,7 @@ gem 'rake'
 gem 'pg', '~> 0.18'
 gem 'activerecord'
 gem 'sinatra-activerecord'
+gem 'rubocop'
 
 group :test do
   gem 'rspec'
