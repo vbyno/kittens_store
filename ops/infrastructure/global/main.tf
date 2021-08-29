@@ -9,10 +9,14 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 module "aws_vpc" {
   source = "../modules/vpc"
 
   name = "dogs-vpc"
   cidr_block = "10.1.0.0/16"
-  subnets_number = 3
+  availability_zones = data.aws_availability_zones.available.names
 }

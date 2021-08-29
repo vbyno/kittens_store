@@ -8,13 +8,6 @@ variable "cidr_block" {
   description = "A /16 CIDR range definition, such as 10.1.0.0/16, that the VPC will use"
 }
 
-variable "subnets_number" {
-  type = number
-  description = "Number of subnets to create"
-  default = 2
-
-  validation {
-    condition     = var.subnets_number > 0 && var.subnets_number < 256
-    error_message = "The number of subnets is limited."
-  }
+variable "availability_zones" {
+  type = list(string)
 }
