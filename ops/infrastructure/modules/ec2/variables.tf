@@ -27,3 +27,13 @@ variable "docker_compose_file_path" {
   type = string
   description = "Docker-compose file to upload on EC2 instance"
 }
+
+variable "assigned_security_groups" {
+  type = list(string)
+  description = "Security groups to assign"
+  default = []
+}
+
+variable "database_url" {
+  type = string
+}

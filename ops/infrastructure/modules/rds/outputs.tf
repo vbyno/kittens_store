@@ -17,5 +17,5 @@ output "connection_uri" {
 }
 
 output "connection_security_group_id" {
-  value = 1
+  value = aws_security_group.connection_security_group.id
 }

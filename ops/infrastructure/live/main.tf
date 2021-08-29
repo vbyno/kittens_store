@@ -35,9 +35,11 @@ module "aws_ec2" {
   name_prefix              = "dogs"
   vpc_id                   = local.global_config.vpc_id
   my_public_ip             = jsondecode(data.http.my_public_ip.body).ip
-  subnet_id                = element(data.terraform_remote_state.vpc_state.outputs.subnet_ids, 0)
+  subnet_id                = element(local.global_config.subnet_ids, 0)
   ssh_local_key_path       = "~/.ssh/aws_key"
-  docker_compose_file_path = "${path.module}/../../../docker-compose.prod.yml"
+  docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
+  assigned_security_groups = [module.aws_rds.connection_security_group_id]
+  database_url             = module.aws_rds.connection_uri
 }
 
 module "aws_rds" {

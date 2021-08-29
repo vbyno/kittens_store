@@ -10,5 +10,6 @@ chmod +x /usr/local/bin/docker-compose
 
 service docker start
 
-cd /home/ec2-user/app || exit
-docker-compose -f docker-compose.prod.yml up -d
+cd /home/ec2-user/app
+echo "DATABASE_URL = ${database_url}" > ./iplist.log
+DATABASE_URL=${database_url} docker-compose -f docker-compose.prod.rds.yml up -d
