@@ -1,14 +1,21 @@
-# output "id" {
-#   value = aws_vpc.vpc.id
-# }
+locals {
+  rds_config = aws_db_instance.default
+}
 
-# output "subnet_ids" {
-# 	value = aws_subnet.subnet.*.id
-# }
+output "connection_uri" {
+  description = "Full url with user/password to use in applicaiton"
+  value = join("", [
+    "postgres://",
+    local.rds_config.username,
+    ":",
+    local.rds_config.password,
+    "@",
+    local.rds_config.endpoint,
+    "/",
+    local.rds_config.name,
+  ])
+}
 
-# output "availability_zones" {
-# 	value = aws_subnet.subnet.*.availability_zone
-# }
-output "rds" {
-  value = aws_db_instance.default
+output "connection_security_group_id" {
+  value = 1
 }

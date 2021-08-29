@@ -3,6 +3,6 @@ variable "name" {
   description = "Name of the RDS instance"
 }
 
-variable "vpc" {
-  description = "vpc object"
+variable "global_config" {
+  description = "Global vpc config"
 }

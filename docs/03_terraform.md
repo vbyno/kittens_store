@@ -37,3 +37,7 @@ ssh -i ~/.ssh/aws_key "ec2-user@$(terraform -chdir=ops/infrastructure output -ra
 curl "ec2-user@$(terraform -chdir=ops/infrastructure output -raw public_ip)"
 ```
 terraform fmt
+terraform output db_connection_uri
+terraform validate
+
+https://github.com/terraform-aws-modules/terraform-aws-rds/blob/master/examples/complete-postgres/outputs.tf

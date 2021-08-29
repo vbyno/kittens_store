@@ -25,20 +25,29 @@ data "http" "my_public_ip" {
   }
 }
 
+locals {
+  global_config = data.terraform_remote_state.vpc_state.outputs
+}
+
 module "aws_ec2" {
   source = "../modules/ec2"
 
-  name_prefix = "dogs"
-  vpc_id = data.terraform_remote_state.vpc_state.outputs.vpc_id
-  my_public_ip = jsondecode(data.http.my_public_ip.body).ip
-  subnet_id = element(data.terraform_remote_state.vpc_state.outputs.subnet_ids, 0)
-  ssh_local_key_path = "~/.ssh/aws_key"
+  name_prefix              = "dogs"
+  vpc_id                   = local.global_config.vpc_id
+  my_public_ip             = jsondecode(data.http.my_public_ip.body).ip
+  subnet_id                = element(data.terraform_remote_state.vpc_state.outputs.subnet_ids, 0)
+  ssh_local_key_path       = "~/.ssh/aws_key"
   docker_compose_file_path = "${path.module}/../../../docker-compose.prod.yml"
 }
 
 module "aws_rds" {
   source = "../modules/rds"
 
-  name = "dogs_rds"
-  vpc = data.terraform_remote_state.vpc_state.outputs.vpc
+  name = "kittensdb"
+  global_config = local.global_config
+}
+module "aws_ecr" {
+  source = "../modules/ecr"
+
+  name = "kittens-store"
 }
