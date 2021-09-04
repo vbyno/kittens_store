@@ -6,7 +6,7 @@ resource "aws_key_pair" "aws_key" {
 resource "aws_security_group" "ec2_security_group" {
   name_prefix = "${var.name_prefix}_sg"
   description = "Allow SSH from the current machine public IP and HTTP for everyone"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc_config.vpc_id
 
   lifecycle {
     create_before_destroy = true
@@ -64,11 +64,8 @@ data "template_file" "init" {
   }
 }
 
-resource "aws_instance" "dogs_server" {
-  ami                         = data.aws_ami.latest_amazon_linux.id
-  instance_type               = "t2.micro"
-  # user_data                   = data.template_file.init.template
-  user_data                   = <<-EOT
+locals {
+  user_data = <<-EOT
 #!/bin/bash
 
 yum update -y
@@ -85,15 +82,34 @@ cd /home/ec2-user/app
 echo "DATABASE_URL = ${var.database_url}" > ./iplist.log
 DATABASE_URL=${var.database_url} docker-compose -f docker-compose.prod.rds.yml up -d
 EOT
-  associate_public_ip_address = true
+}
 
-  key_name  = aws_key_pair.aws_key.key_name
-  subnet_id = var.subnet_id
+resource "aws_launch_template" "app_template" {
+  name_prefix   = "${var.name_prefix}-"
+  image_id      = data.aws_ami.latest_amazon_linux.id
+  instance_type = "t2.micro"
+  key_name      = aws_key_pair.aws_key.key_name
 
-  vpc_security_group_ids = concat(
-    [aws_security_group.ec2_security_group.id],
-    var.assigned_security_groups
-  )
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups = concat(
+      [aws_security_group.ec2_security_group.id],
+      var.assigned_security_groups
+    )
+  }
+
+  # user_data = base64encode(local.user_data)
+  user_data = base64encode(data.template_file.init.rendered)
+}
+
+resource "aws_instance" "dogs_server" {
+  count     = var.instances_number
+  subnet_id = element(var.vpc_config.subnet_ids, count.index)
+
+  launch_template {
+    id      = aws_launch_template.app_template.id
+    version = var.app_version
+  }
 
   tags = {
     Name = "${var.name_prefix}-server"

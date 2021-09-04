@@ -3,7 +3,7 @@ output "vpc_id" {
 }
 
 output "public_ip" {
-  value = module.aws_ec2.public_ip
+  value = element(module.aws_ec2.public_ips, 0)
 }
 
 output "security_group_id" {

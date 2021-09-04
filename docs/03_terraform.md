@@ -35,6 +35,7 @@ Connect:
 ```
 ssh -i ~/.ssh/aws_key "ec2-user@$(terraform -chdir=ops/infrastructure output -raw public_ip)"
 curl "ec2-user@$(terraform -chdir=ops/infrastructure output -raw public_ip)"
+curl "ec2-user@$(terraform output -raw public_ip)/kittens/info"
 ```
 terraform fmt
 terraform output db_connection_uri

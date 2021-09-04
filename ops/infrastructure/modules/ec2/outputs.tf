@@ -1,5 +1,5 @@
-output "public_ip" {
-  value = aws_instance.dogs_server.public_ip
+output "public_ips" {
+  value = aws_instance.dogs_server.*.public_ip
 }
 
 output "security_group_id" {

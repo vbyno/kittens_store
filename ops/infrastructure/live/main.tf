@@ -32,10 +32,10 @@ locals {
 module "aws_ec2" {
   source = "../modules/ec2"
 
-  name_prefix              = "dogs"
-  vpc_id                   = local.global_config.vpc_id
+  name_prefix              = "kittens"
+  instances_number         = 2
+  vpc_config               = local.global_config
   my_public_ip             = jsondecode(data.http.my_public_ip.body).ip
-  subnet_id                = element(local.global_config.subnet_ids, 0)
   ssh_local_key_path       = "~/.ssh/aws_key"
   docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
   assigned_security_groups = [module.aws_rds.connection_security_group_id]
