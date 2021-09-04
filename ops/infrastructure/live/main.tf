@@ -53,3 +53,11 @@ module "aws_ecr" {
 
   name = "kittens-store"
 }
+
+module "aws_load_balancer" {
+  source = "../modules/load_balancer"
+
+  name = "kittens-store"
+  vpc_config = local.global_config
+  ec2_instance_ids = module.aws_ec2.ec2_instance_ids
+}

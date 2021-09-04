@@ -65,13 +65,20 @@ data "template_file" "init" {
 }
 
 locals {
+  sorted_subnet_ids = zipmap(
+    tolist(range(var.instances_number)),
+    [for i in range(var.instances_number): element(sort(var.vpc_config.subnet_ids), i)]
+  )
+
   user_data = <<-EOT
 #!/bin/bash
 
 yum update -y
+
 # Docker
 amazon-linux-extras install docker -y
 usermod -a -G docker ec2-user
+
 # Docker Compose
 curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
@@ -79,10 +86,10 @@ chmod +x /usr/local/bin/docker-compose
 service docker start
 
 cd /home/ec2-user/app
-echo "DATABASE_URL = ${var.database_url}" > ./iplist.log
 DATABASE_URL=${var.database_url} docker-compose -f docker-compose.prod.rds.yml up -d
 EOT
 }
+
 
 resource "aws_launch_template" "app_template" {
   name_prefix   = "${var.name_prefix}-"
@@ -90,12 +97,16 @@ resource "aws_launch_template" "app_template" {
   instance_type = "t2.micro"
   key_name      = aws_key_pair.aws_key.key_name
 
+  vpc_security_group_ids = concat(
+    [aws_security_group.ec2_security_group.id],
+    var.assigned_security_groups
+  )
   network_interfaces {
     associate_public_ip_address = true
-    security_groups = concat(
-      [aws_security_group.ec2_security_group.id],
-      var.assigned_security_groups
-    )
+    # security_groups = concat(
+    #   [aws_security_group.ec2_security_group.id],
+    #   var.assigned_security_groups
+    # )
   }
 
   # user_data = base64encode(local.user_data)
@@ -103,8 +114,10 @@ resource "aws_launch_template" "app_template" {
 }
 
 resource "aws_instance" "dogs_server" {
-  count     = var.instances_number
-  subnet_id = element(var.vpc_config.subnet_ids, count.index)
+  for_each = local.sorted_subnet_ids
+  # count     = var.instances_number
+  # subnet_id = element(var.vpc_config.subnet_ids, count.index)
+  subnet_id = each.value
 
   launch_template {
     id      = aws_launch_template.app_template.id
