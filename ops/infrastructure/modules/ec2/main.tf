@@ -85,8 +85,13 @@ chmod +x /usr/local/bin/docker-compose
 
 service docker start
 
-cd /home/ec2-user/app
-DATABASE_URL=${var.database_url} docker-compose -f docker-compose.prod.rds.yml up -d
+docker run -d --rm \
+  -e DATABASE_URL=${var.database_url} \
+  -e RACK_ENV=production \
+  -e PORT=3000 \
+  -e HOST=0.0.0.0 \
+  -p 80:3000 \
+  vbyno/kittens-store:1.0.0 sh scripts/serve.sh
 EOT
 }
 
@@ -96,27 +101,33 @@ resource "aws_launch_template" "app_template" {
   image_id      = data.aws_ami.latest_amazon_linux.id
   instance_type = "t2.micro"
   key_name      = aws_key_pair.aws_key.key_name
+  default_version = var.app_version
+  user_data = base64encode(local.user_data)
+  # user_data = base64encode(data.template_file.init.rendered)
 
-  vpc_security_group_ids = concat(
-    [aws_security_group.ec2_security_group.id],
-    var.assigned_security_groups
-  )
+  # vpc_security_group_ids = concat(
+  #   [aws_security_group.ec2_security_group.id],
+  #   var.assigned_security_groups
+  # )
   network_interfaces {
     associate_public_ip_address = true
-    # security_groups = concat(
-    #   [aws_security_group.ec2_security_group.id],
-    #   var.assigned_security_groups
-    # )
+    security_groups = concat(
+      [aws_security_group.ec2_security_group.id],
+      var.assigned_security_groups
+    )
   }
 
-  # user_data = base64encode(local.user_data)
-  user_data = base64encode(data.template_file.init.rendered)
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "${var.name_prefix}-instance"
+    }
+  }
 }
 
 resource "aws_instance" "dogs_server" {
   for_each = local.sorted_subnet_ids
-  # count     = var.instances_number
-  # subnet_id = element(var.vpc_config.subnet_ids, count.index)
   subnet_id = each.value
 
   launch_template {
@@ -124,30 +135,7 @@ resource "aws_instance" "dogs_server" {
     version = var.app_version
   }
 
-  tags = {
-    Name = "${var.name_prefix}-server"
-  }
-
-  provisioner "remote-exec" {
-    inline = ["mkdir -p ~/app"]
-
-    connection {
-      type        = "ssh"
-      host        = self.public_ip
-      user        = "ec2-user"
-      private_key = trimspace(file(var.ssh_local_key_path))
-    }
-  }
-
-  provisioner "file" {
-    source      = var.docker_compose_file_path
-    destination = "~/app/docker-compose.prod.rds.yml"
-
-    connection {
-      type        = "ssh"
-      host        = self.public_ip
-      user        = "ec2-user"
-      private_key = trimspace(file(var.ssh_local_key_path))
-    }
+  lifecycle {
+    ignore_changes = [tags]
   }
 }

@@ -44,5 +44,5 @@ variable "instances_number" {
 variable "app_version" {
   type = number
   description = "application version (to recreate ec2 instances)"
-  default = 1
+  default = 5
 }
