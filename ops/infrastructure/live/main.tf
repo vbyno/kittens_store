@@ -44,16 +44,23 @@ module "aws_ec2" {
   database_url             = module.aws_rds.connection_uri
 }
 
+module "aws_launch_template" {
+  source = "../modules/launch_template"
+
+  name_prefix              = "kittens"
+  ssh_local_key_path       = "~/.ssh/aws_key"
+  vpc_config               = local.global_config
+  docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
+  my_public_ip             = chomp(data.http.my_public_ip.body)
+  assigned_security_groups = [module.aws_rds.connection_security_group_id, module.aws_load_balancer.security_groups[0]]
+  database_url             = module.aws_rds.connection_uri
+}
+
 module "aws_autoscaler" {
   source = "../modules/auto_scaler"
 
-  name_prefix              = "kittens"
-  vpc_config               = local.global_config
-  my_public_ip             = chomp(data.http.my_public_ip.body)
-  ssh_local_key_path       = "~/.ssh/aws_key"
-  docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
-  assigned_security_groups = [module.aws_rds.connection_security_group_id, module.aws_load_balancer.security_groups[0]]
-  database_url             = module.aws_rds.connection_uri
+  vpc_config         = local.global_config
+  launch_template_id = module.aws_launch_template.launch_template_id
 }
 
 module "aws_rds" {
