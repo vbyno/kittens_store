@@ -38,6 +38,7 @@ resource "aws_subnet" "subnet" {
   availability_zone = each.key
   vpc_id     = aws_vpc.vpc.id
   cidr_block = cidrsubnet(var.cidr_block, 8, index(local.sorted_zones, each.key) + 1)
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "dogs-subnet-${index(local.sorted_zones, each.key) + 1}"

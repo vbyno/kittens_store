@@ -20,3 +20,10 @@ module "aws_vpc" {
   cidr_block = "10.1.0.0/16"
   availability_zones = data.aws_availability_zones.available.names
 }
+
+module "aws_eks" {
+  source = "../modules/eks"
+
+  name = "kittens"
+  vpc_config = module.aws_vpc
+}
