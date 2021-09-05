@@ -19,10 +19,11 @@ data "terraform_remote_state" "vpc_state" {
 }
 
 data "http" "my_public_ip" {
-  url = "https://ifconfig.co/json"
-  request_headers = {
-    Accept = "application/json"
-  }
+  url = "http://ipv4.icanhazip.com"
+  # url = "https://ifconfig.co/json"
+  # request_headers = {
+  #   Accept = "application/json"
+  # }
 }
 
 locals {
@@ -33,12 +34,13 @@ module "aws_ec2" {
   source = "../modules/ec2"
 
   name_prefix              = "kittens"
-  instances_number         = 2
+  instances_number         = 5
   vpc_config               = local.global_config
-  my_public_ip             = jsondecode(data.http.my_public_ip.body).ip
+  # my_public_ip             = jsondecode(data.http.my_public_ip.body).ip
+  my_public_ip             = chomp(data.http.my_public_ip.body)
   ssh_local_key_path       = "~/.ssh/aws_key"
   docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
-  assigned_security_groups = [module.aws_rds.connection_security_group_id]
+  assigned_security_groups = [module.aws_rds.connection_security_group_id, module.aws_load_balancer.security_groups[0]]
   database_url             = module.aws_rds.connection_uri
 }
 
