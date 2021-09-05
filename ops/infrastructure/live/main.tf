@@ -30,20 +30,6 @@ locals {
   global_config = data.terraform_remote_state.vpc_state.outputs
 }
 
-module "aws_ec2" {
-  source = "../modules/ec2"
-
-  name_prefix              = "kittens"
-  instances_number         = 0
-  vpc_config               = local.global_config
-  # my_public_ip             = jsondecode(data.http.my_public_ip.body).ip
-  my_public_ip             = chomp(data.http.my_public_ip.body)
-  ssh_local_key_path       = "~/.ssh/aws_key"
-  docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
-  assigned_security_groups = [module.aws_rds.connection_security_group_id, module.aws_load_balancer.security_groups[0]]
-  database_url             = module.aws_rds.connection_uri
-}
-
 module "aws_launch_template" {
   source = "../modules/launch_template"
 
@@ -56,11 +42,22 @@ module "aws_launch_template" {
   database_url             = module.aws_rds.connection_uri
 }
 
+module "aws_ec2" {
+  source = "../modules/ec2"
+
+  name_prefix              = "kittens"
+  instances_number         = 1
+  vpc_config               = local.global_config
+  launch_template_id = module.aws_launch_template.launch_template_id
+}
+
 module "aws_autoscaler" {
   source = "../modules/auto_scaler"
 
   vpc_config         = local.global_config
   launch_template_id = module.aws_launch_template.launch_template_id
+  desired_capacity   = 0
+  min_size           = 0
 }
 
 module "aws_rds" {

@@ -15,7 +15,7 @@ output "lb_security_groups" {
 }
 
 output "security_group_id" {
-  value = module.aws_ec2.security_group_id
+  value = module.aws_launch_template.security_group_id
 }
 
 output "db_connection_uri" {
