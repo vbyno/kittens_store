@@ -79,3 +79,10 @@ resource "aws_alb_target_group_attachment" "app_lb_tg_attachment" {
   # target_id        = each.key
   port             = 80
 }
+
+resource "aws_autoscaling_attachment" "app_autoscaling_attachment" {
+  count = length(var.autoscaling_group_ids)
+
+  autoscaling_group_name = element(var.autoscaling_group_ids, count.index)
+  alb_target_group_arn   = aws_alb_target_group.app_lb_target_group.arn
+}

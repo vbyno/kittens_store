@@ -57,11 +57,6 @@ data "template_file" "init" {
 }
 
 locals {
-  sorted_subnet_ids = zipmap(
-    tolist(range(var.instances_number)),
-    [for i in range(var.instances_number): element(sort(var.vpc_config.subnet_ids), i)]
-  )
-
   user_data = <<-EOT
 #!/bin/bash
 
@@ -133,17 +128,3 @@ resource "aws_autoscaling_group" "app_autoscaling_group" {
     version = "$Latest"
   }
 }
-
-# resource "aws_instance" "dogs_server" {
-#   for_each = local.sorted_subnet_ids
-#   subnet_id = each.value
-
-#   launch_template {
-#     id      = aws_launch_template.app_template.id
-#     version = var.app_version
-#   }
-
-#   lifecycle {
-#     ignore_changes = [tags]
-#   }
-# }

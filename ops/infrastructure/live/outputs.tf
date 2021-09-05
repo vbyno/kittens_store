@@ -2,8 +2,8 @@ output "vpc_id" {
   value = local.global_config.vpc_id
 }
 
-output "public_ip" {
-  value = element(module.aws_ec2.public_ips, 0)
+output "ec2_public_ips" {
+  value = module.aws_ec2.public_ips
 }
 
 output "dns_name" {

@@ -35,5 +35,5 @@ variable "vpc_config" {
 variable "app_version" {
   type = number
   description = "application version (to recreate ec2 instances)"
-  default = 5
+  default = 1
 }

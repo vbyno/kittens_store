@@ -36,7 +36,7 @@ variable "instances_number" {
   type = number
 
   validation {
-    condition     = var.instances_number > 0 && var.instances_number < 20
+    condition     = var.instances_number >= 0 && var.instances_number < 20
     error_message = "The number of instances is limited."
   }
 }

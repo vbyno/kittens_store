@@ -11,3 +11,9 @@ variable "ec2_instance_ids" {
 variable "vpc_config" {
   description = "Global vpc config"
 }
+
+variable "autoscaling_group_ids" {
+  type = list(string)
+  description = "An array of autoscaling group IDs"
+  default = []
+}
