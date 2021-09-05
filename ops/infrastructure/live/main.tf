@@ -69,17 +69,19 @@ module "aws_launch_template" {
   vpc_config               = local.global_config
   docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
   my_public_ip             = chomp(data.http.my_public_ip.body)
-  assigned_security_groups = [module.aws_rds.connection_security_group_id,
-                              resource.aws_security_group.app_security_group.id]
   database_url             = module.aws_rds.connection_uri
+  assigned_security_groups = [
+    module.aws_rds.connection_security_group_id,
+    resource.aws_security_group.app_security_group.id
+  ]
 }
 
 module "aws_ec2" {
   source = "../modules/ec2"
 
-  name_prefix              = "kittens"
-  instances_number         = 1
-  vpc_config               = local.global_config
+  name_prefix        = "kittens"
+  instances_number   = 0
+  vpc_config         = local.global_config
   launch_template_id = module.aws_launch_template.launch_template_id
 }
 
@@ -88,14 +90,14 @@ module "aws_autoscaler" {
 
   vpc_config         = local.global_config
   launch_template_id = module.aws_launch_template.launch_template_id
-  desired_capacity   = 0
-  min_size           = 0
+  desired_capacity   = 1
+  min_size           = 1
 }
 
 module "aws_rds" {
   source = "../modules/rds"
 
-  name = "kittensdb"
+  name          = "kittensdb"
   global_config = local.global_config
 }
 module "aws_ecr" {
@@ -107,9 +109,9 @@ module "aws_ecr" {
 module "aws_load_balancer" {
   source = "../modules/load_balancer"
 
-  name = "kittens-store"
-  vpc_config = local.global_config
-  ec2_instance_ids = module.aws_ec2.ec2_instance_ids
-  autoscaling_group_ids = [module.aws_autoscaler.autoscaling_group_id]
+  name                     = "kittens-store"
+  vpc_config               = local.global_config
+  ec2_instance_ids         = module.aws_ec2.ec2_instance_ids
+  autoscaling_group_ids    = [module.aws_autoscaler.autoscaling_group_id]
   assigned_security_groups = [aws_security_group.app_security_group.id]
 }
