@@ -10,8 +10,8 @@ output "dns_name" {
   value = module.aws_load_balancer.dns_name
 }
 
-output "lb_security_groups" {
-  value = module.aws_load_balancer.security_groups
+output "app_security_groups" {
+  value = resource.aws_security_group.app_security_group
 }
 
 output "security_group_id" {

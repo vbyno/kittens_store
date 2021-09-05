@@ -1,39 +1,9 @@
-resource "aws_security_group" "app_lb_sg" {
-  name_prefix = "${var.name}-lb-sg-"
-  description = "Load Balancer security group"
-  vpc_id      = var.vpc_config.vpc_id
-
-  ingress {
-    description      = "HTTP from outside world"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = {
-    Name = "${var.name}-lb-sg"
-  }
-}
 
 resource "aws_alb" "app_lb" {
   name               = "${var.name}-lb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.app_lb_sg.id]
+  security_groups    = var.assigned_security_groups
   subnets            = var.vpc_config.subnet_ids
 
   enable_deletion_protection = false

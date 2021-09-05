@@ -30,6 +30,37 @@ locals {
   global_config = data.terraform_remote_state.vpc_state.outputs
 }
 
+resource "aws_security_group" "app_security_group" {
+  name_prefix = "kittens-connector-"
+  description = "A security group to connect all the instances"
+  vpc_id      = local.global_config.vpc_id
+
+  ingress {
+    description      = "HTTP from outside world"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "kittens-connector-sg"
+  }
+}
+
 module "aws_launch_template" {
   source = "../modules/launch_template"
 
@@ -38,7 +69,8 @@ module "aws_launch_template" {
   vpc_config               = local.global_config
   docker_compose_file_path = "${path.module}/../../../docker-compose.prod.rds.yml"
   my_public_ip             = chomp(data.http.my_public_ip.body)
-  assigned_security_groups = [module.aws_rds.connection_security_group_id, module.aws_load_balancer.security_groups[0]]
+  assigned_security_groups = [module.aws_rds.connection_security_group_id,
+                              resource.aws_security_group.app_security_group.id]
   database_url             = module.aws_rds.connection_uri
 }
 
@@ -79,4 +111,5 @@ module "aws_load_balancer" {
   vpc_config = local.global_config
   ec2_instance_ids = module.aws_ec2.ec2_instance_ids
   autoscaling_group_ids = [module.aws_autoscaler.autoscaling_group_id]
+  assigned_security_groups = [aws_security_group.app_security_group.id]
 }
