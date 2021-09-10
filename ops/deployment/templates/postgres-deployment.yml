@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-postgres-deployment
   labels:
-    app: postgres
+    app: {{ .Release.Name }}-postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: {{ .Release.Name }}-postgres
   template:
     metadata:
       labels:
-        app: postgres
+        app: {{ .Release.Name }}-postgres
     spec:
       restartPolicy: Always
       containers:
@@ -24,7 +24,7 @@ spec:
               cpu: "1"
               memory: "200Mi"
             requests:
-              cpu: "0.5"
+              cpu: "0.1"
               memory: "100Mi"
           ports:
             - containerPort: 5432

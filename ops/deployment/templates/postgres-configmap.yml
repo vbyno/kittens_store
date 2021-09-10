@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-postgres-config
   labels:
-    app: postgres
+    app: {{ .Release.Name }}-postgres
 data:
   POSTGRES_DB: postgresdb
   POSTGRES_USER: postgresadmin

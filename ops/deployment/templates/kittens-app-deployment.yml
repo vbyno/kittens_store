@@ -3,20 +3,20 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-app-deployment
   labels:
-    app: kittens-app-label
+    app: {{ .Release.Name }}-app
 spec:
   replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
-      app: kittens-app-label
+      app: {{ .Release.Name }}-app
   template:
     metadata:
       labels:
-        app: kittens-app-label
+        app: {{ .Release.Name }}-app
     spec:
       # restartPolicy: Never
       containers:
-        - name: kittens-app
+        - name: {{ .Release.Name }}-app
           image: {{ .Values.app.image }}
           imagePullPolicy: "IfNotPresent"
           command: ['sh', 'scripts/serve.sh']
@@ -25,10 +25,10 @@ spec:
               cpu: "1"
               memory: "500Mi"
             requests:
-              cpu: "0.5"
+              cpu: "0.1"
               memory: "100Mi"
           ports:
             - containerPort: 3000
           envFrom:
             - configMapRef:
-                name: kittens-app-config
+                name: {{ .Release.Name }}-app-config

@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-app-service
+  name: {{ .Release.Name }}-app-loadbalancer
   labels:
-    app: kittens-app-label
+    app: {{ .Release.Name }}-app
 spec:
-  type: NodePort
+  type: LoadBalancer
+  selector:
+    app: {{ .Release.Name }}-app
   ports:
     - port: 3000
-  selector:
-    app: kittens-app-label

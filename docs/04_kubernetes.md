@@ -42,3 +42,16 @@ helm install -f values.yaml bitnami/wordpress --generate-name
 
 helm install kittens .
 ```
+
+# EKS
+```
+aws eks list-clusters --region eu-west-3
+aws eks --profile default --region eu-west-3 update-kubeconfig --name main_eks_cluster
+k config get-contexts
+k get pods -A
+k get nodes
+k get nodes -o wide
+k describe pod kittens-app-deployment-7f...
+k get services
+dig a9c91244416d5432799396cfa49a1c48-670824992.eu-west-3.elb.amazonaws.com
+```

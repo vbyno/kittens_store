@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-postgres-service
   labels:
-    app: postgres
+    app: {{ .Release.Name }}-postgres
 spec:
-  type: NodePort
+  type: ClusterIP
+  selector:
+    app: {{ .Release.Name }}-postgres
   ports:
     - port: 5432
-  selector:
-    app: postgres
