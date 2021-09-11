@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-app-config
   labels:
-    app: {{ .Release.Name }}-app
+    app: {{ include "kittens-helm.app" . }}
 data:
   DATABASE_URL: "postgres://postgresadmin:admin123@{{.Release.Name}}-postgres-service:5432/kittens_store"
   RACK_ENV: production
