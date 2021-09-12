@@ -6,3 +6,8 @@ variable "name" {
 variable "vpc_config" {
   description = "Global vpc config"
 }
+
+variable "assigned_security_groups" {
+  type = list(string)
+  default = []
+}

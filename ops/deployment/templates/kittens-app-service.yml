@@ -9,4 +9,7 @@ spec:
   selector:
     app: {{ .Release.Name }}-app
   ports:
-    - port: 3000
+    - name: app
+      protocol: TCP
+      port: 80
+      targetPort: 3000

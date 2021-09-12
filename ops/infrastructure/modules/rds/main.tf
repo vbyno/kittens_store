@@ -59,7 +59,10 @@ resource "aws_security_group" "security_group_db" {
     from_port   = local.db_port
     to_port     = local.db_port
     protocol    = "tcp"
-    security_groups = [aws_security_group.connection_security_group.id]
+    security_groups = concat(
+      [aws_security_group.connection_security_group.id],
+      var.assigned_security_groups
+    )
   }
 
   egress {

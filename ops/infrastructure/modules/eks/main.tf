@@ -114,14 +114,59 @@ resource "aws_eks_cluster" "main" {
   ]
 }
 
+resource "aws_security_group" "worker_group" {
+  name_prefix = "${var.name}_worker"
+  description = "For EKS worker ${var.name}"
+  vpc_id      = var.vpc_config.id
+
+  ingress {
+    description      = "all for cluster"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    security_groups  = [resource.aws_security_group.eks_security_group.id]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+   "kubernetes.io/cluster/${var.name}" = "shared"
+  }
+
+  lifecycle {
+    ignore_changes = [ ingress ]
+  }
+}
+
+resource "aws_launch_template" "eks_node_template" {
+  name_prefix   = var.name
+  instance_type = "t3.medium"
+
+  network_interfaces {
+    security_groups = concat(
+      [resource.aws_security_group.worker_group.id],
+      var.assigned_security_groups
+    )
+  }
+}
+
 resource "aws_eks_node_group" "eks_node_group" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "eks-node-group"
   node_role_arn   = aws_iam_role.eks_node_role.arn
   subnet_ids      = var.vpc_config.subnet_ids
-  instance_types  = ["t3.medium"]
-  disk_size       = 10
-  capacity_type   = "ON_DEMAND"
+  capacity_type = "ON_DEMAND"
+
+  launch_template {
+    id = resource.aws_launch_template.eks_node_template.id
+    version = resource.aws_launch_template.eks_node_template.latest_version
+  }
 
   scaling_config {
     desired_size = 1

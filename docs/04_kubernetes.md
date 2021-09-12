@@ -56,4 +56,5 @@ k describe pod kittens-app-deployment-7f...
 k get services
 dig a9c91244416d5432799396cfa49a1c48-670824992.eu-west-3.elb.amazonaws.com
 curl ac3a7ec573aee43ce978954513a0065f-826158688.eu-west-3.elb.amazonaws.com:3000/kittens/info
+curl a4145cae4ada343ff9bdcab0b6cacd62-1340784471.eu-west-3.elb.amazonaws.com:3000/kittens/info
 ```

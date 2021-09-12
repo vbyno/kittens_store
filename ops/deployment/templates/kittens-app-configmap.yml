@@ -5,7 +5,8 @@ metadata:
   labels:
     app: {{ include "kittens-helm.app" . }}
 data:
-  DATABASE_URL: "postgres://postgresadmin:admin123@{{.Release.Name}}-postgres-service:5432/kittens_store"
+  # DATABASE_URL: "postgres://postgresadmin:admin123@{{.Release.Name}}-postgres-service:5432/kittens_store"
+  DATABASE_URL: "postgres://postgres_user:89vOfyjfU4p98qxl@kittensdb-20210912032650048100000004.c67dcvfiiwoi.eu-west-3.rds.amazonaws.com:5432/kittensdb"
   RACK_ENV: production
   PORT: "3000"
   HOST: "0.0.0.0"

@@ -21,9 +21,16 @@ module "aws_vpc" {
   availability_zones = data.aws_availability_zones.available.names
 }
 
+resource "aws_security_group" "eks_connection_security_group" {
+  name_prefix = "eks-connector-"
+  description = "Security Group to connect EKS with RDS"
+  vpc_id      = module.aws_vpc.id
+}
+
 module "aws_eks" {
   source = "../modules/eks"
 
   name = "kittens"
   vpc_config = module.aws_vpc
+  assigned_security_groups = [aws_security_group.eks_connection_security_group.id]
 }
