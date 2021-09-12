@@ -29,3 +29,9 @@ module "aws_rds" {
   global_config = local.global_config
   assigned_security_groups = [local.global_config.eks_connection_security_group_id]
 }
+
+module "aws_ecr" {
+  source = "../modules/ecr"
+
+  name = "kittens-store"
+}
