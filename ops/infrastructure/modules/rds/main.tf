@@ -31,7 +31,6 @@ resource "aws_db_instance" "default" {
   vpc_security_group_ids = [aws_security_group.security_group_db.id]
 }
 
-
 resource "aws_security_group" "connection_security_group" {
   name_prefix = "${var.name}-db-connector-"
   description = "Connection Security Group"
