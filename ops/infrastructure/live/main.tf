@@ -2,6 +2,7 @@ terraform {
   backend "s3" {
     bucket = "terraform-state-987045484890"
     region = "eu-west-3"
+    key    = "kittens_store/live"
   }
 }
 

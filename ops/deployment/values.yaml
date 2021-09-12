@@ -4,3 +4,4 @@ app:
 db:
   image: postgres:13.3
   storage_path: /Users/vb/dev/devops_bootcamp/assignment-kittens-store/data/k8s-db
+  database_url: add_here

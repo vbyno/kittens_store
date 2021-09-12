@@ -1,7 +1,7 @@
 resource "aws_security_group" "eks_security_group" {
   name_prefix = "eks-connector-"
   description = "A security group to connect via kubectl"
-  vpc_id      = var.vpc_config.id
+  vpc_id      = var.vpc_config.vpc_id
 
   ingress {
     description      = "HTTPs from outside world"
@@ -116,7 +116,7 @@ resource "aws_eks_cluster" "main" {
 resource "aws_security_group" "worker_group" {
   name_prefix = "${var.name}_worker"
   description = "For EKS worker ${var.name}"
-  vpc_id      = var.vpc_config.id
+  vpc_id      = var.vpc_config.vpc_id
 
   ingress {
     description      = "all for cluster"
