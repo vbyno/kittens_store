@@ -36,7 +36,6 @@ data "aws_iam_policy_document" "instance_assume_role_policy" {
     principals {
       type        = "Service"
       identifiers = ["eks.amazonaws.com"]
-      # identifiers = ["ec2.amazonaws.com"]
     }
   }
 }
@@ -163,10 +162,11 @@ resource "aws_eks_node_group" "eks_node_group" {
   subnet_ids      = var.vpc_config.subnet_ids
   capacity_type = "ON_DEMAND"
 
-  launch_template {
-    id = resource.aws_launch_template.eks_node_template.id
-    version = resource.aws_launch_template.eks_node_template.latest_version
-  }
+  # launch_template {
+  #   id = resource.aws_launch_template.eks_node_template.id
+  #   version = resource.aws_launch_template.eks_node_template.latest_version
+  # }
+  instance_types  = ["t3.medium"]
 
   scaling_config {
     desired_size = 1
@@ -177,6 +177,7 @@ resource "aws_eks_node_group" "eks_node_group" {
   depends_on = [
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
-    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_eks_cluster.main
   ]
 }
