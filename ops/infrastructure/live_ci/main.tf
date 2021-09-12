@@ -3,6 +3,7 @@ terraform {
     bucket = "terraform-state-987045484890"
     region = "eu-west-3"
     key    = "kittens_store/live_ci"
+    dynamodb_table = "kittens-store-terraform-state-lock"
   }
 }
 
@@ -16,6 +17,7 @@ data "terraform_remote_state" "vpc_state" {
     bucket = "terraform-state-987045484890"
     key    = "kittens_store/global_ci"
     region = "eu-west-3"
+    dynamodb_table = "kittens-store-terraform-state-lock"
   }
 }
 
