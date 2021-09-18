@@ -22,17 +22,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
       - name: Terraform Init
         run: terraform init
       - name: Terraform Destroy
         run: terraform destroy --auto-approve
       - name: Delete the remaining load balancers
-        run: >
-          aws elb describe-load-balancers
-            | jq '.LoadBalancerDescriptions | .[] | .LoadBalancerName'
-            | xargs -L1
-            aws elb delete-load-balancer --load-balancer-name
+        run: aws elb describe-load-balancers --region ${{ secrets.AWS_REGION }} | jq '.LoadBalancerDescriptions | .[] | .LoadBalancerName' | xargs -L1 aws elb delete-load-balancer --load-balancer-name
+        continue-on-error: true

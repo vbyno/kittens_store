@@ -1,5 +1,8 @@
 name: kittens-action
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - master
 
 jobs:
   # ruby_checks:
@@ -73,7 +76,7 @@ jobs:
   #         --install --wait --atomic --debug
   #         -f=ops/deployment/values.yaml
 
-  infrastructure_apply:
+  infrastructure_plan:
     runs-on: ubuntu-latest
     defaults:
       run:
