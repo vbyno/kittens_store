@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-db-migrate-{{ now | date "20060102150405" }}
+  labels:
+    app: {{ .Release.Name }}-app
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: {{ .Release.Name }}-app-migrations
+          command:
+            - bundle
+            - exec
+            - rake
+            - db:create
+            - db:migrate
+            - db:seed
+          image: {{ .Values.app.image }}
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+            requests:
+              cpu: "0.1"
+              memory: "100Mi"
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-app-config

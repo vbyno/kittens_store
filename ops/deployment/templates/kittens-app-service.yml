@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-app-loadbalancer
+  labels:
+    app: {{ .Release.Name }}-app
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Release.Name }}-app
+  ports:
+    - name: app
+      protocol: TCP
+      port: 80
+      targetPort: 3000

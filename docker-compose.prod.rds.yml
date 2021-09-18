@@ -1,0 +1,13 @@
+version: '2.0'
+
+services:
+  app:
+    image: vbyno/kittens-store:1.0.0
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RACK_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+    command: ['sh', 'scripts/serve.sh']
+    ports:
+      - '80:3000'

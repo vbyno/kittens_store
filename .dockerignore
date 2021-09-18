@@ -1,5 +1,7 @@
 *.md
 data
+ops
+docs
 .git
 .gitignore
 .cache

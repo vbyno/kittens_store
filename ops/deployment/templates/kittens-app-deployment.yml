@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-app-deployment
+  labels:
+    app: {{ .Release.Name }}-app
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-app
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-app
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ .Release.Name }}-app
+          image: {{ .Values.app.image }}
+          imagePullPolicy: "IfNotPresent"
+          command: ['sh', 'scripts/serve.sh']
+          # - bundle
+          # - exec
+          # - rackup
+          # - --port
+          # - $PORT
+          # - --host
+          # - $HOST
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+            requests:
+              cpu: "0.1"
+              memory: "100Mi"
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-app-config
+          readinessProbe:
+            httpGet:
+              path: /kittens/info
+              port: 3000
+              scheme: HTTP
+      initContainers:
+        - name: {{ .Release.Name }}-migrations
+          image: {{ .Values.app.image }}
+          command:
+            - bundle
+            - exec
+            - rake
+            - db:abort_if_pending_migrations
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-app-config

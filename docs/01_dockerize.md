@@ -13,5 +13,6 @@ RACK_ENV=development DATABASE_NAME=kittens_store_dev docker-compose up
 
 To run the specs:
 ```bash
+docker-compose run --rm app bundle
 RACK_ENV=test DATABASE_NAME=kittens_store_test docker-compose run --rm app sh scripts/test.sh
 ```
