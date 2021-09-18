@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket = "terraform-state-987045484890"
-    region = "eu-west-3"
-    key    = "kittens_store/live_ci"
+    bucket         = "terraform-state-987045484890"
+    region         = "eu-west-3"
+    key            = "kittens_store/live_ci"
     dynamodb_table = "kittens-store-terraform-state-lock"
   }
 }
@@ -14,9 +14,9 @@ provider "aws" {
 data "terraform_remote_state" "vpc_state" {
   backend = "s3"
   config = {
-    bucket = "terraform-state-987045484890"
-    key    = "kittens_store/global_ci"
-    region = "eu-west-3"
+    bucket         = "terraform-state-987045484890"
+    key            = "kittens_store/global_ci"
+    region         = "eu-west-3"
     dynamodb_table = "kittens-store-terraform-state-lock"
   }
 }
@@ -28,8 +28,8 @@ locals {
 module "aws_rds" {
   source = "../modules/rds"
 
-  name          = "kittensdb"
-  global_config = local.global_config
+  name                     = "kittensdb"
+  global_config            = local.global_config
   assigned_security_groups = [aws_security_group.eks_connection_security_group.id]
 }
 
@@ -48,7 +48,7 @@ resource "aws_security_group" "eks_connection_security_group" {
 module "aws_eks" {
   source = "../modules/eks"
 
-  name = "kittens"
-  vpc_config = local.global_config
+  name                     = "kittens"
+  vpc_config               = local.global_config
   assigned_security_groups = [aws_security_group.eks_connection_security_group.id]
 }
