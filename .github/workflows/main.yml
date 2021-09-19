@@ -5,41 +5,6 @@ on:
       - master
 
 jobs:
-  # push_image:
-  #   runs-on: ubuntu-latest
-  #   # needs: ruby_checks
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: eu-west-3
-  #     - name: Login to Amazon ECR
-  #       id: login-ecr
-  #       uses: aws-actions/amazon-ecr-login@v1
-  #     - name: Build, tag, and push image to Amazon ECR
-  #       env:
-  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #         ECR_REPOSITORY: kittens-store
-  #         IMAGE_TAG: ${{ github.sha }}
-  #       run: |
-  #         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-  #         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-  #     - name: Lint Helm
-  #       run: helm lint ops/deployment
-  #     - name: Update kubeconfig
-  #       run: aws eks update-kubeconfig --region eu-west-3 --name main_eks_cluster
-  #     - name: Get Pods
-  #       run: kubectl get pods -A
-  #     - name: Deploy to EKS
-  #       run: >
-  #         helm upgrade kittens ./ops/deployment
-  #         --install --wait --atomic --debug
-  #         -f=ops/deployment/values.yaml
-
   infrastructure_apply:
     name: Apply Terraform Changes
     runs-on: ubuntu-latest
@@ -79,6 +44,90 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: terraform-artifacts
+          name: terraform_artifacts
+          path: ops/infrastructure/artifacts
+          retention-days: 5
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: infrastructure_apply
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login_ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push image to Amazon ECR
+        id: build_and_push_image
+        env:
+          ECR_REGISTRY: ${{ steps.login_ecr.outputs.registry }}
+          ECR_REPOSITORY: kittens-store
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          image_url=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          latest_image_url=$ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker build -t $image_url --cache-from $latest_image_url .
+          docker push $image_url
+          echo "::set-output name=IMAGE_URL::$image_url"
+      - name: Save Artifacts
+        run: |
+          mkdir -p ops/artifacts
+          echo ${{ steps.build_and_push_image.outputs.IMAGE_URL }} > ops/artifacts/docker_image_url.txt
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker_artifacts
           path: ops/artifacts
           retention-days: 5
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Lint Helm
+        run: helm lint ops/deployment
+      - uses: actions/download-artifact@v2
+      - name: Upload artifacts into ENV variables
+        run: |
+          echo "eks_cluster_name=$(cat terraform_artifacts/eks_cluster_name.txt)" >> $GITHUB_ENV
+          echo "database_url=$(cat terraform_artifacts/database_url.txt)" >> $GITHUB_ENV
+          echo "docker_image_url=$(cat docker_artifacts/docker_image_url.txt)" >> $GITHUB_ENV
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ env.eks_cluster_name }}
+      - name: Get Pods
+        run: kubectl get pods -A
+      - name: Deploy to EKS
+        run: >
+          helm upgrade kittens ./ops/deployment
+          --install --wait --atomic --debug
+          -f=ops/deployment/values.yaml
+          -n default
+          --set db.database_url=${{ env.database_url }}
+          --set app.image=${{ env.docker_image_url }}
+      - name: Get K8s Services
+        run: kubectl get services -n default
+      - name: Output Application URL
+        id: output_application_url
+        run: |
+          url=$(kubectl get services kittens-app-loadbalancer -n default --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "::set-output name=URL::$url"
+      - name: Test Application Connection
+        run: |
+          sh scripts/wait_for_url.sh ${{ steps.output_application_url.outputs.URL }}/kittens/info 20
+          curl ${{ steps.output_application_url.outputs.URL }}/kittens/info
