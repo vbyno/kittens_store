@@ -1,0 +1,39 @@
+name: Pull Request Cleanup
+on:
+  workflow_dispatch:
+    inputs:
+      pull_request_id:
+        description: 'Pull Request ID'
+        required: true
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
+env:
+  PULL_REQUEST_ID: pr-${{ github.event.number || github.event.inputs.pull_request_id }}
+
+jobs:
+  cleanup:
+    name: Destroy the Infrastructure created for PR
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ops/infrastructure/pull_request
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="key=kittens-pr/${PULL_REQUEST_ID}.tfstate"
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var="pull_request_id=${PULL_REQUEST_ID}"

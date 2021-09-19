@@ -1,4 +1,4 @@
-name: Main Workflow
+name: Main
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ jobs:
       run:
         working-directory: 'ops/infrastructure/live_ci'
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
       - uses: hashicorp/setup-terraform@v1
         with:
@@ -23,11 +23,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: Terraform fmt
+      - name: Terraform Format
         id: fmt
         run: terraform fmt -check
         continue-on-error: false
-      - name: Terraform Init
+      - name: Terraform Initialize
         id: init
         run: terraform init
       - name: Terraform Validate
@@ -111,7 +111,7 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ env.eks_cluster_name }}
       - name: Get Pods
-        run: kubectl get pods -A
+        run: kubectl get pods -A -n default
       - name: Deploy to EKS
         run: >
           helm upgrade kittens ./ops/deployment
