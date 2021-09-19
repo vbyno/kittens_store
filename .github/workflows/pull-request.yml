@@ -1,0 +1,239 @@
+
+name: Pull Request
+on:
+  pull_request:
+    branches:
+      - master
+
+env:
+  PULL_REQUEST_ID: pr-${{ github.event.number }}
+
+jobs:
+  code_check:
+    name: Linters and Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13.3
+        env:
+          POSTGRES_DB: kittens_store_test
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres_user
+          POSTGRES_PASSWORD: postgres_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.4.9
+      - name: install dependencies
+        run: bundle install --jobs 3 --retry 3
+      - name: rubocop
+        run: bundle exec rubocop
+      - name: rspec
+        run: sh scripts/test.sh
+        env:
+          DATABASE_URL: postgres://postgres_user:postgres_password@localhost:5432/kittens_store_test
+          RACK_ENV: test
+
+  build:
+    name: Build Docker Image
+    needs: code_check
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login_ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push image to Amazon ECR
+        id: build_and_push_image
+        env:
+          ECR_REGISTRY: ${{ steps.login_ecr.outputs.registry }}
+          ECR_REPOSITORY: kittens-store
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          image_url=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          latest_image_url=$ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker build -t $image_url --cache-from $latest_image_url .
+          docker push $image_url
+          echo "::set-output name=IMAGE_URL::$image_url"
+      - name: Save Artifacts
+        run: |
+          mkdir -p ops/artifacts
+          echo ${{ steps.build_and_push_image.outputs.IMAGE_URL }} > ops/artifacts/docker_image_url.txt
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker_artifacts
+          path: ops/artifacts
+          retention-days: 5
+
+  infrastructure_check:
+    name: Check Infrastructure Configuration
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ops/infrastructure/live_ci
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      - name: Terraform Init
+        id: init
+        run: terraform init
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        continue-on-error: true
+      - uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          message: |
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outputs.stdout }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${{ env.PLAN }}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*
+          allow-repeats: true
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  temporary_infrastructure:
+    name: Build a Temporary Infrastructure for PR
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ops/infrastructure/pull_request
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="key=kittens-pr/${PULL_REQUEST_ID}.tfstate"
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="pull_request_id=${PULL_REQUEST_ID}"
+      - name: Save artifacts
+        run: |
+          mkdir -p artifacts
+          terraform-bin output -raw database_url > artifacts/database_url.txt
+          terraform-bin output -raw eks_cluster_name > artifacts/eks_cluster_name.txt
+          terraform-bin output -raw k8s_namespace > artifacts/k8s_namespace.txt
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: terraform_temp_artifacts
+          path: ops/infrastructure/pull_request/artifacts
+          retention-days: 5
+
+  deploy:
+    name: Deploy on Temporary Infrastructure
+    needs: [ build, temporary_infrastructure ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Lint Helm
+        run: helm lint ops/deployment
+      - uses: actions/download-artifact@v2
+      - name: Upload artifacts into ENV variables
+        run: |
+          echo "eks_cluster_name=$(cat terraform_temp_artifacts/eks_cluster_name.txt)" >> $GITHUB_ENV
+          echo "database_url=$(cat terraform_temp_artifacts/database_url.txt)" >> $GITHUB_ENV
+          echo "k8s_namespace=$(cat terraform_temp_artifacts/k8s_namespace.txt)" >> $GITHUB_ENV
+          echo "docker_image_url=$(cat docker_artifacts/docker_image_url.txt)" >> $GITHUB_ENV
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ env.eks_cluster_name }}
+      - name: Get Pods
+        run: kubectl get pods -A -n ${{ env.k8s_namespace }}
+      - name: Deploy to EKS
+        run: >
+          helm upgrade kittens ./ops/deployment
+          --install --wait --atomic --debug
+          -f=ops/deployment/values.yaml
+          -n ${{ env.k8s_namespace }}
+          --set db.database_url=${{ env.database_url }}
+          --set app.image=${{ env.docker_image_url }}
+      - name: Get K8s Services
+        run: kubectl get services -n ${{ env.k8s_namespace }}
+      - name: Output Application URL
+        id: output_application_url
+        run: |
+          url=$(kubectl get services kittens-app-loadbalancer -n ${{ env.k8s_namespace }} --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "::set-output name=URL::$url"
+      - name: Test Application Connection
+        run: |
+          sh scripts/wait_for_url.sh ${{ steps.output_application_url.outputs.URL }}/kittens/info 20
+          curl ${{ steps.output_application_url.outputs.URL }}/kittens/info
+      - uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          message: >
+            #### Application Deployed
+            [${{ steps.output_application_url.outputs.URL }}](${{ steps.output_application_url.outputs.URL }})
+          allow-repeats: true

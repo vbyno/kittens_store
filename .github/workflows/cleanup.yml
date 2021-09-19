@@ -1,4 +1,4 @@
-name: cleanup
+name: Load Balancers Cleanup
 on:
   schedule:
     - cron: '0 14 * * *'
