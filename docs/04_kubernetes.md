@@ -40,6 +40,9 @@ helm show values bitnami/postgresql
 
 helm install -f values.yaml bitnami/wordpress --generate-name
 
+helm dependency update
+helm install --dry-run --debug --values ./configs/values-production.yaml kittens .
+
 helm install --dry-run kittens .
 helm install kittens .
 ```
