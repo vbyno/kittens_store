@@ -2,7 +2,9 @@ name: Main
 on:
   push:
     branches:
-      - master
+      - master1
+      # Uncomment this to make it work with master
+      # - master
 
 jobs:
   infrastructure_apply:
